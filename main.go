@@ -53,5 +53,6 @@ func main() {
 	router.HandleFunc("/customers", getCustomers).Methods("GET")
 
 	// Make it accessible at localhost:8000
-	fmt.Println("Started!")
+	fmt.Println("Started at http://localhost:8000!")
+	http.ListenAndServe(":8000", router)
 }
