@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -78,6 +79,28 @@ func getCustomers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customerDatabase)
 }
 
+func getSingleCustomer(w http.ResponseWriter, r *http.Request) {
+	// Reading query parameters, as pointed in docs
+	// https://github.com/gorilla/mux
+	vars := mux.Vars(r)
+
+	// https://stackoverflow.com/questions/35154875/convert-string-to-uint-in-go-lang
+	u64, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		fmt.Printf("Error: %s", err.Error())
+	}
+	id := uint(u64)
+	fmt.Println(id)
+
+	w.WriteHeader(http.StatusOK)
+	for i := range customerDatabase {
+		if customerDatabase[i].Id == id {
+			json.NewEncoder(w).Encode(customerDatabase[i])
+			break
+		}
+	}
+}
+
 func main() {
 	/*
 		Set up a router to handle the following:
@@ -90,6 +113,7 @@ func main() {
 	*/
 	router := mux.NewRouter()
 	router.HandleFunc("/customers", getCustomers).Methods("GET")
+	router.HandleFunc("/customers/{id}", getSingleCustomer).Methods("GET")
 
 	// Make it accessible at localhost:8000
 	fmt.Println("Started at http://localhost:8000!")
