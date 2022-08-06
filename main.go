@@ -101,6 +101,18 @@ func getSingleCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func createCustomer(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func updateCustomer(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func removeCustomer(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func main() {
 	/*
 		Set up a router to handle the following:
@@ -112,8 +124,11 @@ func main() {
 		- Deleting a customer through a /customers/{id} path
 	*/
 	router := mux.NewRouter()
-	router.HandleFunc("/customers", getCustomers).Methods("GET")
 	router.HandleFunc("/customers/{id}", getSingleCustomer).Methods("GET")
+	router.HandleFunc("/customers", getCustomers).Methods("GET")
+	router.HandleFunc("/customers", createCustomer).Methods("POST")
+	router.HandleFunc("/customers/{id}", updateCustomer).Methods("PATCH")
+	router.HandleFunc("/customers/{id}", removeCustomer).Methods("DELETE")
 
 	// Make it accessible at localhost:8000
 	fmt.Println("Started at http://localhost:8000!")
