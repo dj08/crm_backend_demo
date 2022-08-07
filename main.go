@@ -86,6 +86,7 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 	// Reading query parameters, as pointed in docs
 	// https://github.com/gorilla/mux
 	vars := mux.Vars(r)
+	done := false
 
 	// https://stackoverflow.com/questions/35154875/convert-string-to-uint-in-go-lang
 	u64, err := strconv.ParseUint(vars["id"], 10, 32)
@@ -99,8 +100,17 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 	for i := range customerDatabase {
 		if customerDatabase[i].Id == id {
 			json.NewEncoder(w).Encode(customerDatabase[i])
+			done = true
 			break
 		}
+	}
+
+	// Return OK if deletion done. Otherwise return a 404 resource not found.
+	if done {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(customerDatabase)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -149,6 +159,7 @@ func updateCustomer(w http.ResponseWriter, r *http.Request) {
 func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
+	done := false
 
 	// https://stackoverflow.com/questions/35154875/convert-string-to-uint-in-go-lang
 	u64, err := strconv.ParseUint(vars["id"], 10, 32)
@@ -158,19 +169,48 @@ func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	id := uint(u64)
 	fmt.Println(id)
 
-	w.WriteHeader(http.StatusOK)
 	for i := range customerDatabase {
 		if customerDatabase[i].Id == id {
 			delete(customerDatabase, i)
+			done = true
 			break
 		}
 	}
 
-	json.NewEncoder(w).Encode(customerDatabase)
+	// Return OK if deletion done. Otherwise return a 404 resource not found.
+	if done {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(customerDatabase)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 func showHelp(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello there! :]")
+	help := `
+	Hello there! :)
+	This is a simple demo API created using Golang. It implements a trivial customer relationship management backend.
+	Each customer has an entry as follows:
+
+	Id        uint
+	Name      string
+	Role      string
+	Email     string
+	Phone     string
+	Contacted bool
+
+	They are stored serially in an in-memory database. Which is more or less a glorified map.
+
+	The API runs on port 8000. The following requests are available:
+	- Getting a single customer through a http://localhost:8000/customers/{id} path
+	- Getting all customers through a the http://localhost:8000/customers path
+	- Creating a customer through a http://localhost:8000/customers path
+	- Updating a customer through a http://localhost:8000/customers/{id} path
+	- Deleting a customer through a http://localhost:8000/customers/{id} path
+
+	Enjoy!
+	`
+	fmt.Fprintf(w, help)
 }
 
 func main() {
