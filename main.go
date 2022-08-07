@@ -80,7 +80,7 @@ func getCustomers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customerDatabase)
 }
 
-func getSingleCustomer(w http.ResponseWriter, r *http.Request) {
+func getCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Reading query parameters, as pointed in docs
@@ -104,7 +104,7 @@ func getSingleCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createCustomer(w http.ResponseWriter, r *http.Request) {
+func addCustomer(w http.ResponseWriter, r *http.Request) {
 	// REST API implementation prefers JSON
 	w.Header().Set("Content-Type", "application/json")
 
@@ -146,7 +146,7 @@ func updateCustomer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customerDatabase)
 }
 
-func removeCustomer(w http.ResponseWriter, r *http.Request) {
+func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 
@@ -169,6 +169,10 @@ func removeCustomer(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customerDatabase)
 }
 
+func showHelp(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello there! :]")
+}
+
 func main() {
 	/*
 		Set up a router to handle the following:
@@ -180,11 +184,14 @@ func main() {
 		- Deleting a customer through a /customers/{id} path
 	*/
 	router := mux.NewRouter()
-	router.HandleFunc("/customers/{id}", getSingleCustomer).Methods("GET")
+	router.HandleFunc("/customers/{id}", getCustomer).Methods("GET")
 	router.HandleFunc("/customers", getCustomers).Methods("GET")
-	router.HandleFunc("/customers", createCustomer).Methods("POST")
+	router.HandleFunc("/customers", addCustomer).Methods("POST")
 	router.HandleFunc("/customers/{id}", updateCustomer).Methods("PATCH")
-	router.HandleFunc("/customers/{id}", removeCustomer).Methods("DELETE")
+	router.HandleFunc("/customers/{id}", deleteCustomer).Methods("DELETE")
+
+	// A home route to briefly describe the API
+	router.HandleFunc("/", showHelp).Methods("GET")
 
 	// Make it accessible at localhost:8000
 	fmt.Println("Started at http://localhost:8000!")
