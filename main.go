@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -26,12 +27,12 @@ type CustomerInfo struct {
 // The demo has a map as the database.
 // Of course, this should change in a full implementation.
 // ID needs to be unique, and is managed through map key
-type CustomerDatabase = []CustomerInfo
+type CustomerDatabase = map[uint]CustomerInfo
 
 // Global var to emulate the databse for now.
 // Should move it to something more... sophisticated down the line.
 var customerDatabase = CustomerDatabase{
-	CustomerInfo{
+	0: CustomerInfo{
 		Id:        0,
 		Name:      "Peppa Pig",
 		Role:      "Cheeky Piggy",
@@ -39,7 +40,7 @@ var customerDatabase = CustomerDatabase{
 		Phone:     "+44-00-98765-23",
 		Contacted: false,
 	},
-	CustomerInfo{
+	1: CustomerInfo{
 		Id:        1,
 		Name:      "Suzie Sheep",
 		Role:      "Peppa's BFF",
@@ -47,7 +48,7 @@ var customerDatabase = CustomerDatabase{
 		Phone:     "+44-00-987432-23",
 		Contacted: false,
 	},
-	CustomerInfo{
+	2: CustomerInfo{
 		Id:        2,
 		Name:      "Mandy Mouse",
 		Role:      "Peppa's playmate",
@@ -102,7 +103,26 @@ func getSingleCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCustomer(w http.ResponseWriter, r *http.Request) {
+	// REST API implementation prefers JSON
+	w.Header().Set("Content-Type", "application/json")
 
+	var newEntry CustomerInfo
+
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &newEntry)
+
+	// If the entry already exists, flag a conflict.
+	// Otherwise merge it in the current database.
+	// Check if key already exists
+	// https://stackoverflow.com/questions/2050391/how-to-check-if-a-map-contains-a-key-in-go
+	if _, ok := customerDatabase[newEntry.Id]; ok {
+		w.WriteHeader(http.StatusConflict)
+	} else {
+		customerDatabase[newEntry.Id] = newEntry
+		w.WriteHeader(http.StatusCreated)
+	}
+
+	json.NewEncoder(w).Encode(customerDatabase)
 }
 
 func updateCustomer(w http.ResponseWriter, r *http.Request) {
