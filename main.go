@@ -126,7 +126,22 @@ func createCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateCustomer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	var newEntry CustomerInfo
+
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &newEntry)
+
+	// Update the value if it exists.
+	if _, ok := customerDatabase[newEntry.Id]; ok {
+		customerDatabase[newEntry.Id] = newEntry
+		w.WriteHeader(http.StatusCreated)
+	} else {
+		w.WriteHeader(http.StatusConflict)
+	}
+
+	json.NewEncoder(w).Encode(customerDatabase)
 }
 
 func removeCustomer(w http.ResponseWriter, r *http.Request) {
