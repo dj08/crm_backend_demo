@@ -81,6 +81,8 @@ func getCustomers(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSingleCustomer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	// Reading query parameters, as pointed in docs
 	// https://github.com/gorilla/mux
 	vars := mux.Vars(r)
@@ -145,7 +147,26 @@ func updateCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 func removeCustomer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(r)
 
+	// https://stackoverflow.com/questions/35154875/convert-string-to-uint-in-go-lang
+	u64, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		fmt.Printf("Error: %s", err.Error())
+	}
+	id := uint(u64)
+	fmt.Println(id)
+
+	w.WriteHeader(http.StatusOK)
+	for i := range customerDatabase {
+		if customerDatabase[i].Id == id {
+			delete(customerDatabase, i)
+			break
+		}
+	}
+
+	json.NewEncoder(w).Encode(customerDatabase)
 }
 
 func main() {
