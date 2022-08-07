@@ -19,4 +19,10 @@ The API runs on port 8000. The following requests are available:
 - Updating a customer through a http://localhost:8000/customers/{id} path
 - Deleting a customer through a http://localhost:8000/customers/{id} path
 
+Contrary to the much awaited shorthand, you need to use the following command to get this thing running:
+    go run .
+
+You can also run some basic tests:
+    go test
+    
 Enjoy!
