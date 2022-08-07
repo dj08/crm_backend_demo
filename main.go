@@ -111,6 +111,7 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(customerDatabase)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(nil)
 	}
 }
 
@@ -183,6 +184,7 @@ func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(customerDatabase)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(nil)
 	}
 }
 
