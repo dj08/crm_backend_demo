@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM Backend Demo</title>
+  </head>
+  <body>
+    <h1>CRM Backend Demo</h1>
+    <p>This is a simple demo API created using Golang. It implements a trivial customer relationship management 
+        backend. Each customer has an entry as follows:</p>
+    <pre>
+        Id        uint
+        Name      string
+        Role      string
+        Email     string
+        Phone     string
+        Contacted bool
+    </pre>
+
+    <h2>Supported paths</h2>
+    <p>The API runs on port 8000. The following requests are available:</p>
+    <ul>
+        <li>Getting a single customer through <code>http://localhost:8000/customers/{id}</code> path</li>
+        <li>Getting all customers through a the <code>http://localhost:8000/customers</code> path</li>
+        <li>Creating a customer through a <code>http://localhost:8000/customers</code> path</li>
+        <li>Updating a customer through a <code>http://localhost:8000/customers/{id}</code> path</li>
+        <li>Deleting a customer through a <code>http://localhost:8000/customers/{id}</code> path</li>
+    </ul>
+  </body>
+
+  <footer>
+        &copy; Dushyant Juneja
+  </footer>
+</html>

@@ -215,6 +215,10 @@ func showHelp(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, help)
 }
 
+func index(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./static/index.html")
+}
+
 func main() {
 	/*
 		Set up a router to handle the following:
@@ -226,6 +230,7 @@ func main() {
 		- Deleting a customer through a /customers/{id} path
 	*/
 	router := mux.NewRouter()
+	router.HandleFunc("/", index).Methods("GET")
 	router.HandleFunc("/customers/{id}", getCustomer).Methods("GET")
 	router.HandleFunc("/customers", getCustomers).Methods("GET")
 	router.HandleFunc("/customers", addCustomer).Methods("POST")
