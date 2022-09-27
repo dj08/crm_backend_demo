@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -14,8 +14,10 @@ import (
 // Phone number is a string to handle leading zeroes, etc.
 // https://stackoverflow.com/questions/3483156/whats-the-right-way-to-represent-phone-numbers
 // Keys are capitalized so json encoder can see them
+
+// IDs are now represented using Google's official UUID package.
 type CustomerInfo struct {
-	Id        uint
+	Id        uuid.UUID
 	Name      string
 	Role      string
 	Email     string
@@ -24,32 +26,32 @@ type CustomerInfo struct {
 }
 
 // Database Type
-// The demo has a map as the database.
+// The demo has an array as the database.
 // Of course, this should change in a full implementation.
-// ID needs to be unique, and is managed through map key
-type CustomerDatabase = map[uint]CustomerInfo
+// ID needs to be unique, and is managed through uuid
+type CustomerDatabase = []CustomerInfo
 
 // Global var to emulate the databse for now.
 // Should move it to something more... sophisticated down the line.
 var customerDatabase = CustomerDatabase{
-	0: CustomerInfo{
-		Id:        0,
+	CustomerInfo{
+		Id:        uuid.New(),
 		Name:      "Peppa Pig",
 		Role:      "Cheeky Piggy",
 		Email:     "peppa.pig@somewhere.in.uk",
 		Phone:     "+44-00-98765-23",
 		Contacted: false,
 	},
-	1: CustomerInfo{
-		Id:        1,
+	CustomerInfo{
+		Id:        uuid.New(),
 		Name:      "Suzie Sheep",
 		Role:      "Peppa's BFF",
 		Email:     "suzie.sheep@somewhere.in.uk",
 		Phone:     "+44-00-987432-23",
 		Contacted: false,
 	},
-	2: CustomerInfo{
-		Id:        2,
+	CustomerInfo{
+		Id:        uuid.New(),
 		Name:      "Mandy Mouse",
 		Role:      "Peppa's playmate",
 		Email:     "mandy.mouse@somewhere.in.uk",
@@ -88,17 +90,18 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	done := false
 
+	// We can do a direct string comp, instead of adding an erroneous string to num conv
 	// https://stackoverflow.com/questions/35154875/convert-string-to-uint-in-go-lang
-	u64, err := strconv.ParseUint(vars["id"], 10, 32)
-	if err != nil {
-		fmt.Printf("Error: %s", err.Error())
-	}
-	id := uint(u64)
-	fmt.Println(id)
-
+	/* 	u64, err := strconv.ParseUint(vars["id"], 10, 32)
+	   	if err != nil {
+	   		fmt.Printf("Error: %s", err.Error())
+	   	}
+	   	id := uint(u64)
+	   	fmt.Println(id)
+	*/
 	w.WriteHeader(http.StatusOK)
 	for i := range customerDatabase {
-		if customerDatabase[i].Id == id {
+		if customerDatabase[i].Id.String() == vars["id"] {
 			json.NewEncoder(w).Encode(customerDatabase[i])
 			done = true
 			break
@@ -108,7 +111,7 @@ func getCustomer(w http.ResponseWriter, r *http.Request) {
 	// Return OK if deletion done. Otherwise return a 404 resource not found.
 	if done {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(customerDatabase)
+		// json.NewEncoder(w).Encode(customerDatabase)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(nil)
@@ -128,33 +131,46 @@ func addCustomer(w http.ResponseWriter, r *http.Request) {
 	// Otherwise merge it in the current database.
 	// Check if key already exists
 	// https://stackoverflow.com/questions/2050391/how-to-check-if-a-map-contains-a-key-in-go
-	if _, ok := customerDatabase[newEntry.Id]; ok {
-		w.WriteHeader(http.StatusConflict)
-	} else {
-		customerDatabase[newEntry.Id] = newEntry
-		w.WriteHeader(http.StatusCreated)
-	}
+	// if _, ok := customerDatabase[newEntry.Id]; ok {
+	// 	w.WriteHeader(http.StatusConflict)
+	// } else {
+	newEntry.Id = uuid.New()
+	customerDatabase = append(customerDatabase, newEntry)
+	w.WriteHeader(http.StatusCreated)
+	// }
 
 	json.NewEncoder(w).Encode(customerDatabase)
 }
 
 func updateCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(r)
 
 	var newEntry CustomerInfo
+	done := false
 
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(reqBody, &newEntry)
 
 	// Update the value if it exists.
-	if _, ok := customerDatabase[newEntry.Id]; ok {
-		customerDatabase[newEntry.Id] = newEntry
+	for i := range customerDatabase {
+		if customerDatabase[i].Id.String() == vars["id"] {
+			// Delete without preserving order
+			customerDatabase[i] = newEntry
+			// delete(customerDatabase, i)
+			done = true
+			break
+		}
+	}
+	if done {
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(newEntry)
 	} else {
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode("Not found")
 	}
 
-	json.NewEncoder(w).Encode(customerDatabase)
+	// json.NewEncoder(w).Encode(customerDatabase)
 }
 
 func deleteCustomer(w http.ResponseWriter, r *http.Request) {
@@ -163,16 +179,19 @@ func deleteCustomer(w http.ResponseWriter, r *http.Request) {
 	done := false
 
 	// https://stackoverflow.com/questions/35154875/convert-string-to-uint-in-go-lang
-	u64, err := strconv.ParseUint(vars["id"], 10, 32)
-	if err != nil {
-		fmt.Printf("Error: %s", err.Error())
-	}
-	id := uint(u64)
-	fmt.Println(id)
+	// u64, err := strconv.ParseUint(vars["id"], 10, 32)
+	// if err != nil {
+	// 	fmt.Printf("Error: %s", err.Error())
+	// }
+	// id := uint(u64)
+	// fmt.Println(id)
 
 	for i := range customerDatabase {
-		if customerDatabase[i].Id == id {
-			delete(customerDatabase, i)
+		if customerDatabase[i].Id.String() == vars["id"] {
+			// Delete without preserving order
+			customerDatabase[i] = customerDatabase[len(customerDatabase)-1]
+			customerDatabase = customerDatabase[:len(customerDatabase)-1]
+			// delete(customerDatabase, i)
 			done = true
 			break
 		}
